@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,116 +65,78 @@
             document.getElementById("8"),
             document.getElementById("9"),
         ];
-        let p = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], game_over = false;
-        let point_col, point_row, is_line = false;
-        function test_winning() {
-            for (let i = 0; i < 3; i++) {
-                if (p[0][i] != 0 && p[0][i] == p[1][i] && p[1][i] == p[2][i]) {
-                    if (p[0][i] == 1) document.getElementById("w").textContent = "You win";
-                    else if (p[0][i] == 2) document.getElementById("w").textContent = "You lose";
-                    game_over = true;
-                    return;
-                }
-                if (p[i][0] != 0 && p[i][0] == p[i][1] && p[i][1] == p[i][2]) {
-                    if (p[i][0] == 1) document.getElementById("w").textContent = "You win";
-                    else if (p[i][0] == 2) document.getElementById("w").textContent = "You lose";
-                    game_over = true;
-                    return;
-                }
-            }
-            if (p[1][1] != 0 && (p[0][0] == p[1][1] && p[1][1] == p[2][2]) || (p[0][2] == p[1][1] && p[1][1] == p[2][0])) {
-                if (p[1][1] == 1) document.getElementById("w").textContent = "You win";
-                else if (p[1][1] == 2) document.getElementById("w").textContent = "You lose";
-                game_over = true;
-                return;
-            }
-        }
-        function com_show() {
-            com();
-            b[point_row * 3 + point_col].innerHTML = '<span class="x">x</span>';
-            p[point_row][point_col] = 2;
-            console.log(p);
-        }
-        function com() {
-            is_line = false;
-            for (let i = 0; i < 3; i++) {
-                for (let j = 0; j < 2; j++) {
-                    if (p[i][j] == p[i][j + 1] && p[i][2 - j * 2] == 0 && p[i][j] != 0) {
-                        point_row = i;
-                        point_col = 2 - j * 2;
-                        is_line = true;
-                        if (p[i][j] == 2) return;
+        const w = document.getElementById("w");
+        const win = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+        start();
+        function start() {
+            let board = ["", "", "", "", "", "", "", "", ""];
+            let board_score = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+            for (let i = 0; i < 9; i++) {
+                b[i].onclick = function () {
+                    if (board[i] === "") {
+                        this.innerHTML = '<span class="circle"></span>';
+                        board[i] = "o";
                     }
-                    if (p[j][i] == p[j + 1][i] && p[2 - j * 2][i] == 0 && p[j][i] != 0) {
-                        point_col = i;
-                        point_row = 2 - j * 2;
-                        is_line = true;
-                        if (p[j][i] == 2) return;
+                    if (Twin(board, "o")) {
+                        w.textContent = "You win";
+                        return;
                     }
-                    if (p[j][j] == p[j + 1][j + 1] && p[2 - j * 2][2 - j * 2] == 0 && p[j][j] != 0) {
-                        point_col = 2 - j * 2;
-                        point_row = 2 - j * 2;
-                        is_line = true;
-                        if (p[j][j] == 2) return;
+                    let best_score = -Infinity;
+                    let move;
+                    for (let i = 0; i < 9; i++) {
+                        if (board[i] === "") {
+                            board[i] = "x";
+                            let score = minimax(board, false);
+                            board[i] = "";
+                            if (score > best_score) {
+                                best_score = score;
+                                move = i;
+                            }
+                        }
                     }
-                    if (p[2 - j][j] == p[1 - j][j + 1] && p[j * 2][2 - j * 2] == 0 && p[2 - j][j] != 0) {
-                        point_row = j * 2;
-                        point_col = 2 - j * 2;
-                        is_line = true;
-                        if (p[2 - j][j] == 2) return;
+                    if (move !== undefined) {
+                        b[move].innerHTML = '<span class="x">x</span>';
+                        board[move] = "x";
                     }
-                }
-                if (p[i][0] == p[i][2] && p[i][1] == 0 && p[i][0] != 0) {
-                    point_col = 1;
-                    point_row = i;
-                    is_line = true;
-                    if (p[i][0] == 2) return;
-                }
-                if (p[0][i] == p[2][i] && p[1][i] == 0 && p[0][i] != 0) {
-                    point_col = i;
-                    point_row = 1;
-                    is_line = true;
-                    if (p[0][i] == 2) return;
-                }
-            }
-            if (p[0][0] == p[2][2] && p[1][1] == 0 && p[0][0] != 0) {
-                point_col = 1;
-                point_row = 1;
-                is_line = true;
-                if (p[0][0] == 2) return;
-            }
-            if (p[2][0] == p[0][2] && p[1][1] == 0 && p[2][0] != 0) {
-                point_col = 1;
-                point_row = 1;
-                is_line = true;
-                if (p[2][0] == 2) return;
-            }
-            if (!is_line) {
-                let emptyIn = [];
-                for (let j = 0; j < 9; j++) if (b[j].innerHTML.trim() === "") emptyIn.push(j);
-                if (emptyIn.length > 0) {
-                    let rand = Math.floor(Math.random() * emptyIn.length);
-                    point_row = Math.floor(emptyIn[rand] / 3);
-                    point_col = emptyIn[rand] % 3;
-                }
-            }
-
-        }
-        for (let i = 0; i < 9; i++) {
-            b[i].onclick = function () {
-                if (this.innerHTML.trim() === "") {
-                    this.innerHTML = '<span class="circle"></span>';
-                    p[Math.floor(i / 3)][i % 3] = 1;
-                    test_winning();
-                    if (game_over) return;
-                    com_show();
-                    test_winning();
-                    if (game_over) return;
+                    if (Twin(board, "x")) {
+                        w.textContent = "You lose";
+                        return;
+                    }
                 }
             }
         }
 
-
+        function minimax(board, isAI) {
+            if (Twin(board, "o")) return -10;
+            if (Twin(board, "x")) return 10;
+            if (!board.includes("")) return 0;
+            if (isAI) {
+                let best_score = -Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "x";
+                        best_score = Math.max(best_score, minimax(board, false));
+                        board[i] = "";
+                    }
+                }
+                return best_score;
+            }
+            else {
+                let least_score = Infinity;
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] === "") {
+                        board[i] = "o";
+                        least_score = Math.min(least_score, minimax(board, true));
+                        board[i] = "";
+                    }
+                }
+                return least_score;
+            }
+        }
+        function Twin(board, player) {
+            return win.some(line => line.every(i => board[i] === player))
+        }
     </script>
 </body>
+
 </html>
